@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Budsjettkompis</title>
+<style>
+:root{--bg:#f6f5f1;--card:#fff;--ink:#1d1d1b;--muted:#6b6b66;--line:#e4e2db;--accent:#2f6b4f;--accent-soft:#e3efe8;--danger:#b4432f;--danger-soft:#f7e4df;--warn:#c98a1b}
+@media (prefers-color-scheme:dark){:root{--bg:#141513;--card:#1d1e1b;--ink:#ecebe6;--muted:#9a9a93;--line:#2e2f2b;--accent:#6fbf94;--accent-soft:#1f3329;--danger:#e5806b;--danger-soft:#3a221c;--warn:#e0aa48}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:980px;margin:0 auto;padding:28px 16px 64px}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+h1{font-size:28px;margin:0;letter-spacing:-.02em}
+h2{font-size:15px;margin:0 0 12px;font-weight:650}
+.sub{color:var(--muted);margin:2px 0 0}
+button,input,select{font:inherit;color:inherit}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:6px 12px;cursor:pointer}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--muted)}
+.month{display:flex;align-items:center;gap:8px}
+.month strong{min-width:130px;text-align:center;text-transform:capitalize}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+.stat .label{color:var(--muted);font-size:13px}
+.stat .val{font-size:24px;font-weight:650;font-variant-numeric:tabular-nums}
+.pos{color:var(--accent)}.neg{color:var(--danger)}
+.track{height:10px;background:var(--line);border-radius:99px;overflow:hidden}
+.fill{height:100%;border-radius:99px;transition:width .3s}
+.budget-row{display:flex;justify-content:space-between;align-items:center;margin:10px 0 0;color:var(--muted);font-size:13px;gap:8px;flex-wrap:wrap}
+.budget-row input{width:110px;padding:4px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg)}
+form{display:grid;gap:10px}
+.seg{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:transparent;padding:7px;cursor:pointer;color:var(--muted)}
+.seg button.on{background:var(--accent-soft);color:var(--ink);font-weight:600}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label{display:grid;gap:4px;font-size:13px;color:var(--muted)}
+input,select{padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);width:100%}
+.err{color:var(--danger);font-size:13px;min-height:1em;margin:0}
+.cat{display:grid;grid-template-columns:90px 1fr 80px;gap:10px;align-items:center;margin-bottom:8px;font-size:14px}
+.cat .amt{text-align:right;font-variant-numeric:tabular-nums}
+.cat .track{height:8px}
+.empty{color:var(--muted);font-size:14px;margin:0}
+ul{list-style:none;margin:0;padding:0}
+li{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+li:first-child{border-top:0}
+li .desc{font-weight:550}
+li .meta{color:var(--muted);font-size:13px}
+li .amt{font-variant-numeric:tabular-nums;font-weight:600}
+.del{border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:18px;line-height:1;padding:4px 6px;border-radius:6px}
+.del:hover{background:var(--danger-soft);color:var(--danger)}
+.list-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;gap:8px;flex-wrap:wrap}
+.list-head select{width:auto;padding:4px 8px}
+footer{display:flex;gap:8px;justify-content:center;margin-top:20px}
+@media(max-width:720px){.grid,.cols{grid-template-columns:1fr}.stat .val{font-size:20px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Budsjettkompis</h1>
+      <p class="sub">Hold styr på studentøkonomien, én måned om gangen.</p>
+    </div>
+    <div class="month">
+      <button class="btn" id="prev" aria-label="Forrige måned">‹</button>
+      <strong id="monthLabel"></strong>
+      <button class="btn" id="next" aria-label="Neste måned">›</button>
+    </div>
+  </header>
+
+  <section class="grid">
+    <div class="card stat"><div class="label">Inntekter</div><div class="val pos" id="sIncome">0</div></div>
+    <div class="card stat"><div class="label">Utgifter</div><div class="val" id="sExpense">0</div></div>
+    <div class="card stat"><div class="label">Igjen denne måneden</div><div class="val" id="sBalance">0</div></div>
+  </section>
+
+  <section class="card" style="margin-bottom:12px">
+    <h2>Månedsbudsjett for utgifter</h2>
+    <div class="track"><div class="fill" id="budgetFill"></div></div>
+    <div class="budget-row">
+      <span id="budgetText"></span>
+      <label style="display:flex;align-items:center;gap:6px">Budsjett (kr)
+        <input type="number" id="budgetInput" min="0" step="100"></label>
+    </div>
+  </section>
+
+  <section class="cols">
+    <div class="card">
+      <h2>Ny transaksjon</h2>
+      <form id="form" novalidate>
+        <div class="seg" role="group" aria-label="Type">
+          <button type="button" data-type="expense" class="on">Utgift</button>
+          <button type="button" data-type="income">Inntekt</button>
+        </div>
+        <div class="row">
+          <label>Beløp (kr)<input type="number" id="amount" min="1" step="1" placeholder="F.eks. 250"></label>
+          <label>Kategori<select id="category"></select></label>
+        </div>
+        <div class="row">
+          <label>Dato<input type="date" id="date"></label>
+          <label>Beskrivelse<input type="text" id="desc" maxlength="60" placeholder="F.eks. Rema 1000"></label>
+        </div>
+        <p class="err" id="err"></p>
+        <button class="btn primary" type="submit">Legg til</button>
+      </form>
+    </div>
+    <div class="card">
+      <h2>Utgifter per kategori</h2>
+      <div id="cats"></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="list-head">
+      <h2 style="margin:0">Transaksjoner</h2>
+      <select id="filter" aria-label="Filtrer">
+        <option value="all">Alle</option>
+        <option value="expense">Kun utgifter</option>
+        <option value="income">Kun inntekter</option>
+      </select>
+    </div>
+    <ul id="list"></ul>
+  </section>
+
+  <footer>
+    <button class="btn ghost" id="demo">Last inn eksempeldata</button>
+    <button class="btn ghost" id="reset">Nullstill alt</button>
+  </footer>
+</div>
+
+<script>
+const KEY = 'budsjettkompis-v1';
+const CATS = {
+  expense: ['Mat', 'Bolig', 'Transport', 'Studier', 'Fritid', 'Klær', 'Annet'],
+  income: ['Lånekassen', 'Jobb', 'Annet']
+};
+
+let state = load();
+let type = 'expense';
+let current = new Date(); current.setDate(1);
+
+function load() {
+  try {
+    const s = JSON.parse(localStorage.getItem(KEY));
+    if (s && Array.isArray(s.tx)) return s;
+  } catch (e) {}
+  return { tx: [], budget: 8000 };
+}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+
+const kr = n => new Intl.NumberFormat('nb-NO', { style: 'currency', currency: 'NOK', maximumFractionDigits: 0 }).format(n);
+const pad = n => String(n).padStart(2, '0');
+const ym = d => d.getFullYear() + '-' + pad(d.getMonth() + 1);
+const isoDate = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+const $ = id => document.getElementById(id);
+
+function fillCategories() {
+  $('category').innerHTML = '';
+  CATS[type].forEach(c => {
+    const o = document.createElement('option');
+    o.value = o.textContent = c;
+    $('category').appendChild(o);
+  });
+}
+
+document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => {
+  type = b.dataset.type;
+  document.querySelectorAll('.seg button').forEach(x => x.classList.toggle('on', x === b));
+  fillCategories();
+}));
+
+$('form').addEventListener('submit', e => {
+  e.preventDefault();
+  const amount = Math.round(Number($('amount').value));
+  const date = $('date').value;
+  const desc = $('desc').value.trim();
+  if (!amount || amount <= 0) return showErr('Skriv inn et beløp større enn 0.');
+  if (!date) return showErr('Velg en dato.');
+  showErr('');
+  state.tx.push({
+    id: Date.now() + Math.random().toString(36).slice(2, 6),
+    type, amount, date,
+    category: $('category').value,
+    desc: desc || $('category').value
+  });
+  save();
+  const [y, m] = date.split('-').map(Number);
+  current = new Date(y, m - 1, 1);
+  $('amount').value = ''; $('desc').value = '';
+  render();
+});
+function showErr(msg) { $('err').textContent = msg; }
+
+$('prev').onclick = () => { current.setMonth(current.getMonth() - 1); render(); };
+$('next').onclick = () => { current.setMonth(current.getMonth() + 1); render(); };
+$('filter').onchange = render;
+$('budgetInput').addEventListener('change', () => {
+  const v = Math.max(0, Math.round(Number($('budgetInput').value) || 0));
+  state.budget = v; save(); render();
+});
+
+$('reset').onclick = () => {
+  if (confirm('Slette alle transaksjoner?')) { state = { tx: [], budget: 8000 }; save(); render(); }
+};
+$('demo').onclick = () => {
+  const now = new Date(); const y = now.getFullYear(), m = now.getMonth();
+  const d = day => isoDate(new Date(y, m, day));
+  const ex = [
+    ['income', 13000, 'Lånekassen', 'Studielån', 1],
+    ['income', 3200, 'Jobb', 'Deltidsjobb kafé', 10],
+    ['expense', 5600, 'Bolig', 'Husleie', 1],
+    ['expense', 450, 'Transport', 'Månedskort', 2],
+    ['expense', 612, 'Mat', 'Ukeshandel', 3],
+    ['expense', 389, 'Mat', 'Ukeshandel', 10],
+    ['expense', 129, 'Fritid', 'Kino', 12],
+    ['expense', 890, 'Studier', 'Pensumbok', 5],
+    ['expense', 240, 'Fritid', 'Fredagspils', 14],
+    ['expense', 499, 'Klær', 'Vinterjakke (salg)', 18],
+    ['expense', 455, 'Mat', 'Ukeshandel', 17]
+  ];
+  ex.forEach(([t, a, c, ds, dd], i) => state.tx.push({ id: 'demo' + Date.now() + i, type: t, amount: a, category: c, desc: ds, date: d(Math.min(dd, 28)) }));
+  current = new Date(y, m, 1);
+  save(); render();
+};
+
+function render() {
+  $('monthLabel').textContent = current.toLocaleDateString('nb-NO', { month: 'long', year: 'numeric' });
+  const month = state.tx.filter(t => t.date.startsWith(ym(current)));
+  const income = month.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  const expense = month.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  const balance = income - expense;
+
+  $('sIncome').textContent = kr(income);
+  $('sExpense').textContent = kr(expense);
+  $('sBalance').textContent = kr(balance);
+  $('sBalance').className = 'val ' + (balance >= 0 ? 'pos' : 'neg');
+
+  // Budsjett
+  const b = state.budget || 0;
+  if (document.activeElement !== $('budgetInput')) $('budgetInput').value = b;
+  const pct = b > 0 ? expense / b : 0;
+  const fill = $('budgetFill');
+  fill.style.width = Math.min(100, pct * 100) + '%';
+  fill.style.background = pct > 1 ? 'var(--danger)' : pct > 0.8 ? 'var(--warn)' : 'var(--accent)';
+  $('budgetText').textContent = b > 0
+    ? (pct > 1 ? `Over budsjett med ${kr(expense - b)}` : `${kr(expense)} av ${kr(b)} brukt (${Math.round(pct * 100)} %), ${kr(b - expense)} igjen`)
+    : 'Sett et budsjett for å følge med på forbruket.';
+
+  // Kategorier
+  const byCat = {};
+  month.filter(t => t.type === 'expense').forEach(t => byCat[t.category] = (byCat[t.category] || 0) + t.amount);
+  const sorted = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
+  const max = sorted.length ? sorted[0][1] : 0;
+  const cats = $('cats'); cats.innerHTML = '';
+  if (!sorted.length) cats.innerHTML = '<p class="empty">Ingen utgifter denne måneden ennå.</p>';
+  sorted.forEach(([c, v]) => {
+    const row = document.createElement('div'); row.className = 'cat';
+    row.innerHTML = '<span></span><div class="track"><div class="fill" style="background:var(--accent)"></div></div><span class="amt"></span>';
+    row.children[0].textContent = c;
+    row.querySelector('.fill').style.width = (v / max * 100) + '%';
+    row.children[2].textContent = kr(v);
+    cats.appendChild(row);
+  });
+
+  // Liste
+  const f = $('filter').value;
+  const list = $('list'); list.innerHTML = '';
+  const shown = month.filter(t => f === 'all' || t.type === f).sort((a, b) => b.date.localeCompare(a.date));
+  if (!shown.length) list.innerHTML = '<li><p class="empty">Ingen transaksjoner å vise.</p></li>';
+  shown.forEach(t => {
+    const li = document.createElement('li');
+    li.innerHTML = '<div><div class="desc"></div><div class="meta"></div></div><span class="amt"></span><button class="del" title="Slett" aria-label="Slett">×</button>';
+    li.querySelector('.desc').textContent = t.desc;
+    li.querySelector('.meta').textContent = t.category + ' · ' + new Date(t.date + 'T12:00').toLocaleDateString('nb-NO', { day: 'numeric', month: 'short' });
+    const amt = li.querySelector('.amt');
+    amt.textContent = (t.type === 'income' ? '+' : '−') + kr(t.amount);
+    amt.className = 'amt ' + (t.type === 'income' ? 'pos' : '');
+    li.querySelector('.del').onclick = () => { state.tx = state.tx.filter(x => x.id !== t.id); save(); render(); };
+    list.appendChild(li);
+  });
+}
+
+fillCategories();
+$('date').value = isoDate(new Date());
+render();
+</script>
+</body>
+</html>
