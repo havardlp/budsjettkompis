@@ -1,6 +1,6 @@
 # Budsjettkompis
 
-En enkel budsjettapp for studenter, laget med vibe coding (AI-assistert koding).
+En enkel budsjettapp for studenter, laget med vibe coding 
 
 ## Hva og hvorfor
 Mange studenter lever på studielån og deltidsjobb, og har lite oversikt over hvor pengene blir av i løpet av måneden. Budsjettkompis gjør det raskt å registrere inntekter og utgifter og se hvordan man ligger an mot et månedsbudsjett.
